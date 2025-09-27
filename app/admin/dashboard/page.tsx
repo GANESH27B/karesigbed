@@ -478,7 +478,7 @@ export default function AdminDashboard() {
       trend: "up",
     },
     {
-      title: "Active Subjects",
+      title: "Total Events",
       value: "1", // This is now managed as a single daily subject
       change: "0%",
       icon: Calendar,
@@ -999,14 +999,6 @@ export default function AdminDashboard() {
                                 }}
                               >
                                 <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="hover:bg-red-50"
-                                onClick={() => handleExportUserAttendance(student.id)}
-                              >
-                                <FileSpreadsheet className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"

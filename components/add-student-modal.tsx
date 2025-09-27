@@ -57,6 +57,11 @@ export function AddStudentModal({ isOpen, onClose, onStudentAdded }: AddStudentM
     "Treasurer",
     "Technical Lead",
     "Event Coordinator",
+    "Web Development Team",
+    "Media Team",
+    "PR Team",
+    "Documentation Team",
+    "Research and Analysis Team",
     "Member",
   ]
   
@@ -195,7 +200,7 @@ export function AddStudentModal({ isOpen, onClose, onStudentAdded }: AddStudentM
                   <Label htmlFor="fullName">Full Name</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Enter ame" className="pl-10" />
+                    <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Enter Name" className="pl-10" />
                   </div>
                   {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
                 </div>
