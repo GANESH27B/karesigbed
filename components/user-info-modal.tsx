@@ -26,10 +26,15 @@ interface UserInfoModalProps {
   isOpen: boolean
   onClose: () => void
   onMarkAttendance?: () => void
-  selectedSubject?: string
+  selectedSubject?: string,
+  attendanceStatus?: {
+    marked: boolean;
+    time?: string;
+    subject?: string;
+  } | null;
 }
 
-export function UserInfoModal({ user, isOpen, onClose, onMarkAttendance, selectedSubject }: UserInfoModalProps) {
+export function UserInfoModal({ user, isOpen, onClose, onMarkAttendance, selectedSubject, attendanceStatus }: UserInfoModalProps) {
   if (!user) return null
 
   const getACMRoleColor = (role: string) => {
@@ -238,14 +243,25 @@ export function UserInfoModal({ user, isOpen, onClose, onMarkAttendance, selecte
             <Button variant="outline" onClick={onClose} className="px-8 py-3 hover:bg-gray-50 bg-white/80">
               Close
             </Button>
-            {onMarkAttendance && selectedSubject && (
+            {onMarkAttendance && selectedSubject && !attendanceStatus?.marked && (
               <Button
                 onClick={onMarkAttendance}
                 className="px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold shadow-lg"
               >
                 <CheckCircle2 className="h-5 w-5 mr-2" />
-                Mark Attendance for {selectedSubject}
+                Mark Attendance
               </Button>
+            )}
+            {attendanceStatus?.marked && (
+              <div className="flex items-center space-x-3 p-3 bg-green-100 text-green-800 rounded-lg border border-green-200">
+                <CheckCircle2 className="h-6 w-6" />
+                <div>
+                  <p className="font-semibold">Attendance Already Marked</p>
+                  <p className="text-sm">
+                    For: {attendanceStatus.subject} at {attendanceStatus.time}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </div>

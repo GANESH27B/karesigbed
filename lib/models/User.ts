@@ -37,6 +37,9 @@ const cleanupObject = (obj: Record<string, any>): Record<string, any> => {
 }
 
 export class UserModel {
+  // Expose executeQuery for more flexible queries in API routes
+  static executeQuery = executeQuery
+
   static async create(userData: any): Promise<{ success: boolean; user?: any; error?: string }> {
     try {
       const {
@@ -119,6 +122,21 @@ export class UserModel {
     try {
       const query = "SELECT * FROM users WHERE email = ? AND is_active = true"
       const result = await executeQuery(query, [email])
+
+      if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        return { success: true, data: result.data[0] as User }
+      }
+
+      return { success: false, error: "User not found" }
+    } catch (error: any) {
+      return { success: false, error: error.message }
+    }
+  }
+
+  static async findByRegistrationNumber(registrationNumber: string): Promise<{ success: boolean; data?: User; error?: string }> {
+    try {
+      const query = "SELECT * FROM users WHERE registration_number = ? AND is_active = true"
+      const result = await executeQuery(query, [registrationNumber])
 
       if (result.success && Array.isArray(result.data) && result.data.length > 0) {
         return { success: true, data: result.data[0] as User }

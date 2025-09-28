@@ -286,6 +286,30 @@ export const authService = {
     }
   },
 
+  findUserByIdentifier: async (identifier: string): Promise<User | null> => {
+    try {
+      const token = authService.getAuthToken()
+      if (!token) {
+        handleUnauthorized()
+        return null
+      }
+      const response = await fetch(`/api/users/lookup/${identifier}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return mapDbUserToFrontend(data.user)
+      }
+      return null
+    } catch (error) {
+      console.error("Find user by identifier error:", error)
+      return null
+    }
+  },
+
   deleteUser: async (userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const token = authService.getAuthToken()
@@ -324,6 +348,8 @@ export const attendanceService = {
     userId: string,
     subject: string,
     markedBy: string,
+    status: "present" | "absent" | "late" = "present",
+    source: "scanner" | "manual" = "scanner",
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const token = authService.getAuthToken()
@@ -333,7 +359,7 @@ export const attendanceService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ userId, subject, markedBy }),
+        body: JSON.stringify({ userId, subject, markedBy, status, source }),
       })
 
       const data = await response.json()

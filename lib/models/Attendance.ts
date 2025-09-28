@@ -7,6 +7,7 @@ export interface AttendanceRecord {
   attendance_date: string
   attendance_time: string
   status: "present" | "absent" | "late"
+  source?: "scanner" | "manual"
   marked_by?: string
   qr_code_used?: string
   created_at: string
@@ -26,6 +27,8 @@ export class AttendanceModel {
     userId: string,
     subjectName: string,
     markedBy: string,
+    status: "present" | "absent" | "late" = "present",
+    source: "scanner" | "manual" = "scanner",
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const trimmedSubjectName = subjectName.trim()
@@ -70,9 +73,9 @@ export class AttendanceModel {
       const time = now.toTimeString().split(" ")[0]
 
       const result = await executeQuery(
-        `INSERT INTO attendance (user_id, subject_id, attendance_date, attendance_time, status, marked_by) 
-         VALUES (?, ?, ?, ?, 'present', ?)`,
-        [userId, subjectId, today, time, markedBy],
+        `INSERT INTO attendance (user_id, subject_id, attendance_date, attendance_time, status, marked_by, source) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, subjectId, today, time, status, markedBy, source],
       )
 
       return { success: result.success, error: result.success ? undefined : "Failed to mark attendance" }

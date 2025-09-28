@@ -6,7 +6,7 @@ import {
 } from "@/withAuthorization"
 
 const markAttendanceHandler: AuthorizedHandler = async (request, context) => {
-  const { userId, subject, markedBy: providedMarkedBy } = await request.json()
+  const { userId, subject, markedBy: providedMarkedBy, status, source } = await request.json()
   const { decoded } = context
 
   // Validate input
@@ -25,7 +25,7 @@ const markAttendanceHandler: AuthorizedHandler = async (request, context) => {
   const markerId = decoded.role === 'admin' ? (providedMarkedBy || decoded.userId) : decoded.userId;
 
   // Mark attendance
-  const result = await AttendanceModel.markAttendance(userId, subject, markerId)
+  const result = await AttendanceModel.markAttendance(userId, subject, markerId, status, source)
 
   if (result.success) {
     return NextResponse.json({

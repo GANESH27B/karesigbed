@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   QrCode,
@@ -28,21 +29,30 @@ import {
   UserPlus,
   Camera,
   FileSpreadsheet,
+  Loader2,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { type User, authService, attendanceService } from "@/lib/auth"
 import { ProfileEditModal } from "@/components/profile-edit-modal"
 import { AddStudentModal } from "@/components/add-student-modal"
-import { UserInfoModal } from "@/components/user-info-modal"
+import { UserInfoModal } from "@/components/user-info-modal";
 import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner"
 import { SimpleAvatar } from "@/components/simple-avatar"
 import { ErrorHandler } from "@/lib/error-handler"
 import { ACM_ROLES } from "@/lib/config"
 import * as XLSX from "xlsx"
+import { toast } from "sonner"
 
 // Base64 encoded sound data for audio feedback
+const SUCCESS_SOUND_DATA =
+  "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"+
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"+
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; // Truncated for brevity
 const ERROR_SOUND_DATA =
   `data:audio/wav;base64,UklGRq4HAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YdIHAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg-`
+
+const DAILY_SUBJECT_KEY = "dailyAttendanceSubject";
+
 export default function AdminDashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [scanResult, setScanResult] = useState("")
@@ -52,7 +62,6 @@ export default function AdminDashboard() {
   const [isEditingSubject, setIsEditingSubject] = useState(false)
   const [tempDailySubject, setTempDailySubject] = useState("")
   const [manualStudentId, setManualStudentId] = useState("")
-  const [students, setStudents] = useState<User[]>([])
   const [todayAttendance, setTodayAttendance] = useState<any[]>([])
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -63,12 +72,16 @@ export default function AdminDashboard() {
   const [isAdminInfoOpen, setIsAdminInfoOpen] = useState(false)
   const [scannerError, setScannerError] = useState<string | null>(null)
   const [rawQrContent, setRawQrContent] = useState<string>("")
-  const [scanStatus, setScanStatus] = useState<"neutral" | "success" | "error">("neutral")
+  const [scanStatus, setScanStatus] = useState<"neutral" | "success" | "error" | "paused">("paused")
   const [isScannerPaused, setIsScannerPaused] = useState(true)
   const resetScanStateTimeout = useRef<NodeJS.Timeout | null>(null)
-  
+  const [isManualMarking, setIsManualMarking] = useState(false)
+  const [manualFoundUser, setManualFoundUser] = useState<User | null>(null)
+  const [manualAttendanceStatus, setManualAttendanceStatus] = useState<{ marked: boolean; time?: string; subject?: string } | null>(null)
   const [attendanceStats, setAttendanceStats] = useState<{ [key: string]: { percentage: number } }>({})
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
+  const [students, setStudents] = useState<User[]>([])
+  const [manualSearchTerm, setManualSearchTerm] = useState("")
 
   const router = useRouter()
 
@@ -111,6 +124,27 @@ export default function AdminDashboard() {
     return () => clearInterval(timer)
   }, [router])
 
+  useEffect(() => {
+    // This effect runs once on mount to check for a persisted daily subject.
+    const storedSubjectData = localStorage.getItem(DAILY_SUBJECT_KEY);
+    if (storedSubjectData) {
+      try {
+        const { subject, date } = JSON.parse(storedSubjectData);
+        const today = new Date().toISOString().split("T")[0];
+
+        if (date === today) {
+          setDailySubject(subject);
+        } else {
+          // If the stored date is not today, clear it.
+          localStorage.removeItem(DAILY_SUBJECT_KEY);
+        }
+      } catch (error) {
+        console.error("Failed to parse daily subject from localStorage", error);
+        localStorage.removeItem(DAILY_SUBJECT_KEY);
+      }
+    }
+  }, []);
+
   const loadData = async () => {
     try {
       const allStudents = await authService.getAllUsers()
@@ -135,28 +169,28 @@ export default function AdminDashboard() {
 
   const handleScanResult = async (detectedCodes: IDetectedBarcode[]) => {
     // The scanner can fire multiple times for the same QR code.
-    // We'll process only the first detected code and prevent rapid re-scans of the same content.
     const result = detectedCodes[0]?.rawValue
-    if (!result || result === rawQrContent) {
+    if (!result || isScannerPaused) {
       return
     }
 
-    // If there's a pending timeout to reset the state, clear it.
-    // This prevents an old timeout from wiping the state of a new scan.
+    setIsScannerPaused(true) // Pause scanner to prevent re-scans
+
     if (resetScanStateTimeout.current) {
       clearTimeout(resetScanStateTimeout.current)
     }
 
-    setRawQrContent(result) // Store the raw value for display and to prevent re-scans
+    setRawQrContent(result)
 
-    // Set a new timeout to clear the scan state after a few seconds.
-    // This allows scanning the same student again.
     resetScanStateTimeout.current = setTimeout(() => {
+      if (!isScannerPaused) setIsScannerPaused(false) // Resume scanner only if it was active
       setRawQrContent("")
-      setScanStatus("neutral")
+      setScanResult("")
+      setScanStatus(isScannerPaused ? "paused" : "neutral")
     }, 2500)
 
     if (!dailySubject) {
+      playSound(ERROR_SOUND_DATA)
       alert("Please set an Event/Subject for today first!")
       setScanStatus("error")
       return
@@ -175,10 +209,10 @@ export default function AdminDashboard() {
     const student = students.find(
       (s) => s.registrationNumber === studentIdentifier || s.studentId === studentIdentifier || s.id === studentIdentifier,
     )
-
+    
     if (student) {
       setScannedUser(student)
-      const attendanceResult = await attendanceService.markAttendance(student.id, dailySubject, currentUser.id)
+      const attendanceResult = await attendanceService.markAttendance(student.id, dailySubject, currentUser.id, "present", "scanner")
       if (attendanceResult.success) {
         playSound(SUCCESS_SOUND_DATA)
         setScanStatus("success")
@@ -213,30 +247,94 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleManualAttendance = async () => {
+  const handleFindStudentForManualAttendance = async () => {
     if (!manualStudentId || !dailySubject) {
-      alert("Please enter a student ID. The daily subject must also be set.")
+      toast.warning("Please enter a student ID and ensure the daily subject is set.")
       return
     }
-
-    const student = students.find(
-      (s) => s.id === manualStudentId || s.studentId === manualStudentId || s.registrationNumber === manualStudentId,
-    )
-    if (!student) {
-      alert("Student not found!")
+    setIsManualMarking(true)
+    const student = await authService.findUserByIdentifier(manualStudentId);
+    if (!student || student.role !== "user") {
+      toast.error("Student not found. This person is not a member.")
+      setIsManualMarking(false)
       return
     }
-
-    const result = await attendanceService.markAttendance(student.id, dailySubject, currentUser?.id || "")
-    if (result.success) {
-      alert(`✅ Attendance marked successfully for ${student.fullName}!`)
-      setManualStudentId("")
-      await loadData()
+    setManualFoundUser(student);
+    
+    // Check if attendance was already marked for this user and subject today
+    const attendanceRecord = todayAttendance.find(rec => rec.user_id === student.id && rec.subject_name === dailySubject);
+    if (attendanceRecord) {
+      setManualAttendanceStatus({ marked: true, time: attendanceRecord.attendance_time, subject: attendanceRecord.subject_name });
     } else {
-      alert(`❌ ${result.error}`)
+      setManualAttendanceStatus({ marked: false });
     }
+    
+    setIsUserInfoModalOpen(true);
+    setIsManualMarking(false);
   }
 
+  const confirmAndMarkManualAttendance = async () => {
+    if (!manualFoundUser || !dailySubject || !currentUser) {
+      toast.error("An error occurred. Missing user or subject information.");
+      return;
+    }
+    const result = await attendanceService.markAttendance(manualFoundUser.id, dailySubject, currentUser.id, "present", "manual");
+    if (result.success) {
+      toast.success(`✅ Attendance marked for ${manualFoundUser.fullName}!`);
+      await loadData();
+    } else {
+      toast.error(`❌ ${result.error}`);
+    }
+    setIsUserInfoModalOpen(false);
+    setManualFoundUser(null);
+    setManualAttendanceStatus(null);
+    setManualStudentId("");
+  }
+
+  const handleManualToggle = async (student: User, isPresent: boolean) => {
+    if (!dailySubject || !currentUser) {
+      toast.error("Please set the daily event before marking attendance.")
+      return
+    }
+
+    // Optimistic UI update: Change the state immediately for a responsive feel.
+    const originalAttendance = [...todayAttendance];
+
+    if (isPresent) {
+      // Temporarily add a placeholder record to make the switch move instantly.
+      const placeholderRecord = { user_id: student.id, subject_name: dailySubject, attendance_time: 'now', status: 'present' };
+      setTodayAttendance(prev => [...prev, placeholderRecord]);
+
+      // Mark as present
+      const result = await attendanceService.markAttendance(student.id, dailySubject, currentUser.id, "present", "manual")
+      if (result.success) {
+        toast.success(`✅ Attendance marked for ${student.fullName}.`)
+      } else {
+        toast.error(`❌ ${result.error || "Failed to mark attendance."}`)
+        setTodayAttendance(originalAttendance); // Revert on failure
+      }
+    } else {
+      // Temporarily remove the record to make the switch move instantly.
+      setTodayAttendance(prev => prev.filter(rec => !(rec.user_id === student.id && rec.subject_name === dailySubject)));
+
+      // Find and delete the attendance record
+      const record = todayAttendance.find(rec => rec.user_id === student.id && rec.subject_name === dailySubject)
+      if (record) {
+        const result = await attendanceService.deleteAttendance(record.id)
+        if (result.success) {
+          toast.info(`ⓘ Attendance for ${student.fullName} has been removed.`)
+        } else {
+          toast.error(`❌ ${result.error || "Failed to remove attendance."}`)
+          setTodayAttendance(originalAttendance); // Revert on failure
+        }
+      } else {
+        // This case can happen if the state is out of sync.
+        toast.warning(`No attendance record found for ${student.fullName} to remove.`);
+      }
+    }
+    // Finally, reload data from the server to ensure consistency.
+    await loadData()
+  }
   const handleLogout = () => {
     authService.logout()
     router.push("/")
@@ -443,6 +541,10 @@ export default function AdminDashboard() {
       return
     }
     setDailySubject(trimmedSubject)
+    localStorage.setItem(
+      DAILY_SUBJECT_KEY,
+      JSON.stringify({ subject: trimmedSubject, date: new Date().toISOString().split("T")[0] })
+    );
     setIsEditingSubject(false)
   }
 
@@ -490,16 +592,24 @@ export default function AdminDashboard() {
   ]
 
   const getScannerBoxClasses = () => {
-    switch (scanStatus) {
+    switch (scanStatus) {      
       case "success":
         return "border-solid border-green-500 ring-4 ring-green-500/30"
       case "error":
         return "border-solid border-red-500 ring-4 ring-red-500/30"
-      default:
+      default: // "neutral" or "paused"
         return "border-dashed border-gray-700"
     }
   }
 
+  const manualFilteredStudents = students.filter(student => 
+    student.registrationNumber?.toLowerCase().includes(manualSearchTerm.toLowerCase()) ||
+    student.fullName?.toLowerCase().includes(manualSearchTerm.toLowerCase())
+  );
+
+  const isStudentPresent = (studentId: string) => {
+    return todayAttendance.some(rec => rec.user_id === studentId && rec.subject_name === dailySubject)
+  }
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-100 flex items-center justify-center">
@@ -685,176 +795,146 @@ export default function AdminDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* QR Scanner Tab */}
           <TabsContent value="scan">
             <div className="grid lg:grid-cols-2 gap-8">
+              {/* Left Column: Scanner */}
               <Card className="bg-white/90 backdrop-blur-xl border-white/30 shadow-2xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Scan className="h-6 w-6 text-orange-600" />
-                    <span>QR Code Scanner</span>
-                  </CardTitle>
-                  <CardDescription>Scan student QR codes to mark attendance</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl text-center">
-                    <p className="text-sm font-semibold text-orange-800">Current Event/Subject for Scanning:</p>
-                    <p className="text-lg font-bold text-orange-900 mt-1">{dailySubject || "Not Set"}</p>
-                  </div>
-                  <div className="flex justify-center">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Scan className="h-6 w-6 text-orange-600" />
+                        <span>QR Code Scanner</span>
+                      </CardTitle>
+                      <CardDescription>Scan student QR codes to mark attendance.</CardDescription>
+                    </div>
                     <Button
-                      onClick={() => setIsScannerPaused((prev) => !prev)}
-                      className={`w-full h-12 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${
-                        isScannerPaused
-                          ? "bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
-                          : "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white"
-                      }`}
+                      onClick={() => setIsScannerPaused(!isScannerPaused)}
                       disabled={!dailySubject}
+                      className={`w-32 transition-all duration-300 ${
+                        isScannerPaused
+                          ? "bg-gray-500 hover:bg-gray-600"
+                          : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                      } text-white shadow-lg rounded-xl`}
                     >
-                      {isScannerPaused ? <Camera className="h-5 w-5 mr-2" /> : <XCircle className="h-5 w-5 mr-2" />}
-                      {isScannerPaused ? "Start Scanner" : "Stop Scanner"}
+                      {isScannerPaused ? "Start Scan" : "Pause Scan"}
                     </Button>
                   </div>
-                  {rawQrContent && (
-                    <div className="p-4 bg-gray-100 border border-gray-200 rounded-xl text-left animate-in fade-in-50">
-                      <p className="text-sm font-semibold text-gray-700 text-center mb-2">
-                        Last Scanned QR Data:
-                      </p>
-                      <pre className="text-xs text-gray-900 font-mono break-all whitespace-pre-wrap bg-white p-3 rounded-lg shadow-inner">
-                        {(() => {
-                          try {
-                            return JSON.stringify(JSON.parse(rawQrContent), null, 2)
-                          } catch (e) {
-                            return rawQrContent
-                          }
-                        })()}
-                      </pre>
-                    </div>
-                  )}
-
+                </CardHeader>
+                <CardContent className="flex flex-col items-center space-y-4">
                   <div
-                    className={`relative bg-gray-900 p-2 rounded-3xl border-2 overflow-hidden aspect-square flex items-center justify-center transition-all duration-300 ${getScannerBoxClasses()}`}
+                    className={`relative w-full max-w-md p-2 rounded-2xl border-4 transition-all duration-300 ${getScannerBoxClasses()}`}
                   >
-                    {!dailySubject ? (
-                      <div className="text-center text-gray-400 p-4">
-                        <Camera className="h-16 w-16 mx-auto mb-4" />
-                        <p className="font-semibold">Scanner Disabled</p>
-                        <p className="text-sm mt-2">Please set an event name to enable the scanner.</p>
+                    <Scanner
+                      paused={isScannerPaused || !dailySubject}
+                      onScan={handleScanResult}
+                      onError={(e) => setScannerError(e.message)}
+                      components={{
+                        finder: true,
+                        torch: true,
+                      }}
+                      styles={{
+                        container: { borderRadius: "12px", width: "100%" },
+                        finder: { borderColor: "rgba(255, 255, 255, 0.5)" },
+                      }}
+                    />
+                    {(isScannerPaused || !dailySubject) && (
+                      <div className="absolute inset-0 bg-gray-800/90 flex flex-col items-center justify-center text-white rounded-xl z-10 p-4 text-center">
+                        {!dailySubject ? (
+                          <>
+                            <XCircle className="h-12 w-12 mb-4 text-red-400" />
+                            <p className="text-lg font-semibold">Set an Event to Start</p>
+                            <p className="text-sm text-gray-300">You must set a daily event/subject before you can start scanning.</p>
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="h-12 w-12 mb-4 text-gray-400" />
+                            <p className="text-lg font-semibold">Scanner Paused</p>
+                            <p className="text-sm text-gray-300">Click "Start Scan" to begin marking attendance.</p>
+                          </>
+                        )}
                       </div>
-                    ) : isScannerPaused ? (
-                      <div className="text-center text-gray-400 p-4">
-                        <Camera className="h-16 w-16 mx-auto mb-4" />
-                        <p className="font-semibold">Scanner is Off</p>
-                        <p className="text-sm mt-2">Click "Start Scanner" to activate the camera.</p>
-                      </div>
-                    ) : scannerError ? (
-                      <div className="text-center text-red-400 p-4">
-                        <XCircle className="h-16 w-16 mx-auto mb-4" />
-                        <p className="font-semibold">Camera Error</p>
-                        <p className="text-sm mt-2">{scannerError}</p>
-                      </div>
-                    ) : (
-                      <Scanner
-                        onScan={handleScanResult}
-                        onError={(error) => {
-                          setScannerError(error.message)
-                          setIsScannerPaused(true)
-                        }}
-                        containerStyle={{ width: "100%", height: "100%", paddingTop: "0", borderRadius: "1.25rem" }}
-                        videoStyle={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "1.25rem" }}
-                      />
                     )}
                   </div>
-
-                  {scanResult && (
-                    <div
-                      className={`p-6 rounded-2xl transition-all ${
-                        scanResult.startsWith("✅")
-                          ? "bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200"
-                          : "bg-gradient-to-r from-red-50 to-orange-50 border border-red-200"
-                      }`}
-                    >
-                      <div className="flex items-start space-x-4">
-                        {scanResult.startsWith("✅") ? (
-                          <CheckCircle2 className="h-8 w-8 text-teal-600 flex-shrink-0 mt-1" />
-                        ) : (
-                          <XCircle className="h-8 w-8 text-red-600 flex-shrink-0 mt-1" />
-                        )}
-                        <div className="flex-grow">
-                          <p
-                            className={`text-lg font-semibold ${
-                              scanResult.startsWith("✅") ? "text-teal-800" : "text-red-800"
-                            }`}
-                          >
-                            {scanResult.startsWith("✅") ? "Scan Success" : "Scan Info"}
-                          </p>
-                          <p
-                            className={`text-sm mb-3 ${
-                              scanResult.startsWith("✅") ? "text-teal-600" : "text-red-600"
-                            }`}
-                          >
-                            {scanResult.substring(2)} {/* Remove the emoji for display */}
-                          </p>
-                          {scannedUser && (
-                            <div className="p-3 bg-white/50 border border-gray-200 rounded-lg text-sm space-y-2">
-                              <div className="flex justify-between items-center gap-4">
-                                <span className="font-medium text-gray-600">Name:</span>
-                                <span className="font-semibold text-gray-800 text-right">{scannedUser.fullName}</span>
-                              </div>
-                              <div className="flex justify-between items-center gap-4">
-                                <span className="font-medium text-gray-600">Email:</span>
-                                <span className="font-semibold text-gray-800 text-right break-all">{scannedUser.email}</span>
-                              </div>
-                              <div className="flex justify-between items-center gap-4">
-                                <span className="font-medium text-gray-600">Reg. No:</span>
-                                <span className="font-semibold text-gray-800 text-right">{scannedUser.registrationNumber}</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
-              <Card className="bg-white/90 backdrop-blur-xl border-white/30 shadow-2xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Edit className="h-6 w-6 text-teal-600" />
-                    <span>Manual Attendance</span>
-                  </CardTitle>
-                  <CardDescription>Mark attendance manually if needed</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                        Student ID / Registration Number
-                      </label>
+              {/* Right Column: Scan Result & Manual Entry */}
+              <div className="space-y-8">
+                <Card className="bg-white/90 backdrop-blur-xl border-white/30 shadow-2xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <UserCheck className="h-6 w-6 text-orange-600" />
+                      <span>Scan Status</span>
+                    </CardTitle>
+                    <CardDescription>Result of the last scan will appear here.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-6 rounded-2xl text-center transition-all duration-300 ${getScannerBoxClasses()}`}>
+                      {scanResult ? (
+                        <p className="text-lg font-semibold">{scanResult}</p>
+                      ) : (
+                        <p className="text-gray-500">Waiting for scan...</p>
+                      )}
+                      {rawQrContent && <p className="text-sm text-gray-500 mt-2">Scanned: {rawQrContent}</p>}
+                      {scannerError && <p className="text-red-500 mt-2">Scanner Error: {scannerError}</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/90 backdrop-blur-xl border-white/30 shadow-2xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <UserPlus className="h-6 w-6 text-orange-600" />
+                      <span>Manual Attendance</span>
+                    </CardTitle>
+                    <CardDescription>Search for a student and toggle their attendance for today's event.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                       <Input
-                        placeholder="Enter student ID or registration number"
-                        value={manualStudentId}
-                        onChange={(e) => setManualStudentId(e.target.value)}
-                        className="h-12 bg-white/70 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl text-lg"
+                        placeholder="Search by name or registration no."
+                        value={manualSearchTerm}
+                        onChange={(e) => setManualSearchTerm(e.target.value)}
+                        className="h-12 pl-10 bg-white/70 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20 rounded-xl"
+                        disabled={!dailySubject}
                       />
                     </div>
-                    <div>
-                      <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl text-center">
-                        <p className="text-sm font-semibold text-teal-800">Marking for Event/Subject:</p>
-                        <p className="text-lg font-bold text-teal-900 mt-1">{dailySubject || "Not Set"}</p>
-                      </div>
+                    <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+                      {manualFilteredStudents.map(student => (
+                        <div key={student.id} className="flex items-center justify-between p-3 bg-white/80 rounded-lg border border-gray-200/50">
+                          <div className="flex items-center space-x-3">
+                            <SimpleAvatar 
+                              src={student.profileImage}
+                              fallback={ErrorHandler.handleSplitError(student.fullName)}
+                              size="sm"
+                            />
+                            <div>
+                              <p className="font-semibold text-gray-800">{student.fullName}</p>
+                              <p className="text-xs text-gray-500">{student.registrationNumber}</p>
+                            </div>
+                          </div>
+                          <Switch
+                            checked={isStudentPresent(student.id)}
+                            onCheckedChange={(isChecked) => handleManualToggle(student, isChecked)}
+                            disabled={!dailySubject}
+                            className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-red-500"
+                            aria-label={`Toggle attendance for ${student.fullName}`}
+                          />
+                        </div>
+                      ))}
+                      {manualFilteredStudents.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Users className="h-8 w-8 mx-auto mb-2" />
+                          <p>No students found.</p>
+                          <p className="text-xs">Adjust your search or clear the filter.</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <Button
-                    onClick={handleManualAttendance}
-                    className="w-full h-14 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    <UserCheck className="h-5 w-5 mr-2" />
-                    Mark Attendance
-                  </Button>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
@@ -1073,8 +1153,15 @@ export default function AdminDashboard() {
 
                       <div className="text-right">
                         <div className="text-lg font-bold text-teal-700 flex items-center space-x-2">
-                          <Clock className="h-5 w-5" />
-                          <span>{record.attendance_time}</span>
+                          {record.source === 'scanner' ? (
+                            <QrCode className="h-5 w-5 text-teal-600" title="Scanned via QR" />
+                          ) : (
+                            <UserCheck className="h-5 w-5 text-blue-600" title="Marked Manually" />
+                          )}
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-5 w-5" />
+                            <span>{record.attendance_time}</span>
+                          </div>
                         </div>
                         <Badge
                           className={`${
@@ -1202,14 +1289,17 @@ export default function AdminDashboard() {
 
       {/* User Info Modal for Scanned QR */}
       <UserInfoModal
-        user={scannedUser}
+        user={manualFoundUser || scannedUser}
         isOpen={isUserInfoModalOpen}
         onClose={() => {
           setIsUserInfoModalOpen(false)
           setScannedUser(null)
+          setManualFoundUser(null)
+          setManualAttendanceStatus(null)
         }}
-        onMarkAttendance={handleMarkAttendanceFromModal}
+        onMarkAttendance={manualFoundUser ? confirmAndMarkManualAttendance : (scannedUser ? handleMarkAttendanceFromModal : undefined)}
         selectedSubject={dailySubject}
+        attendanceStatus={manualFoundUser ? manualAttendanceStatus : null}
       />
 
       {/* Profile Edit Modal for Selected Student */}
