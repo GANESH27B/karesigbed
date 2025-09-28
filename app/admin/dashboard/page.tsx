@@ -830,6 +830,19 @@ export default function AdminDashboard() {
                       onScan={handleScanResult}
                       onError={(e) => setScannerError(e.message)}
                       components={{
+                        formats: [
+                          "qr_code",
+                          "code_128",
+                          "code_39",
+                          "code_93",
+                          "codabar",
+                          "ean_13",
+                          "ean_8",
+                          "itf",
+                          "upc_a",
+                          "upc_e",
+                          "data_matrix",
+                        ],
                         finder: true,
                         torch: true,
                       }}
